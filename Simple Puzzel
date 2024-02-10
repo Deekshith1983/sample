@@ -1,0 +1,73 @@
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Constants
+WIDTH, HEIGHT = 300, 300
+TILE_SIZE = WIDTH // 3
+FPS = 60
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+FONT_SIZE = 36
+FONT_COLOR = BLACK
+
+# Function to draw the puzzle board
+def draw_board(board):
+    for row in range(3):
+        for col in range(3):
+            pygame.draw.rect(screen, WHITE, (col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+            font = pygame.font.Font(None, FONT_SIZE)
+            if board[row][col] != 0:
+                number_text = font.render(str(board[row][col]), True, FONT_COLOR)
+                screen.blit(number_text, (col * TILE_SIZE + TILE_SIZE // 3, row * TILE_SIZE + TILE_SIZE // 3))
+
+# Function to check if the puzzle is solved
+def is_solved(board):
+    return all(board[row][col] == row * 3 + col + 1 for row in range(3) for col in range(3))
+
+# Function to shuffle the puzzle
+def shuffle_board(board):
+    flat_board = [num for row in board for num in row]
+    random.shuffle(flat_board)
+    shuffled_board = [flat_board[i:i+3] for i in range(0, len(flat_board), 3)]
+    return shuffled_board
+
+# Initialize the game window
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Puzzle Game")
+clock = pygame.time.Clock()
+
+# Initialize the puzzle board
+puzzle_board = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]  # 0 represents the empty space
+puzzle_board = shuffle_board(puzzle_board)
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            clicked_col = mouse_x // TILE_SIZE
+            clicked_row = mouse_y // TILE_SIZE
+
+            # Check if the clicked tile is adjacent to the empty space
+            if (clicked_row == empty_row and abs(clicked_col - empty_col) == 1) or \
+               (clicked_col == empty_col and abs(clicked_row - empty_row) == 1):
+                puzzle_board[empty_row][empty_col], puzzle_board[clicked_row][clicked_col] = \
+                    puzzle_board[clicked_row][clicked_col], puzzle_board[empty_row][empty_col]
+                empty_row, empty_col = clicked_row, clicked_col
+
+    screen.fill(WHITE)
+    draw_board(puzzle_board)
+    pygame.display.flip()
+    clock.tick(FPS)
+
+    if is_solved(puzzle_board):
+        print("Congratulations! You solved the puzzle.")
+        pygame.quit()
+        sys.exit()
